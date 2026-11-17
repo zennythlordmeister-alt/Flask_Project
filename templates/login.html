@@ -1,0 +1,135 @@
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Login - Toko Cihuy Anjay</title>
+        <!-- Tailwind CSS v4 CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+        <style>
+            .shade {
+                box-shadow: 10px 10px 0px 2px black;
+            }
+        </style>
+    </head>
+    <body class="bg-slate-100 text-slate-800 font-mono min-h-screen flex items-center justify-center p-4">
+
+        <!-- Card Login Wrapper -->
+        <div class="bg-white border-2 border-black w-full max-w-md p-8 rounded-sm shade">
+            
+            <!-- Header / Logo -->
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-bold tracking-wide">Selamat Datang</h1>
+                <p id="status" class="text-sm text-slate-500 mt-1">Silakan login untuk masuk ke aplikasi kasir.</p>
+            </div>
+
+            <!-- Form Login -->
+            <form id="login_form" method="POST" class="space-y-5">
+                
+                <!-- Input Username -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2" for="username">
+                        Username
+                    </label>
+                    <input 
+                        class="w-full px-4 py-2.5 bg-slate-50 border-2 border-black rounded-sm focus:outline-none focus:ring-2 focus:ring-red-600 text-sm" 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        placeholder="Masukkan username..." 
+                        required 
+                    />
+                </div>
+
+                <!-- Input Password -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2" for="password">
+                        Password
+                    </label>
+                    <input 
+                        class="w-full px-4 py-2.5 bg-slate-50 border-2 border-black rounded-sm focus:outline-none focus:ring-2 focus:ring-red-600 text-sm" 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="••••••••" 
+                        required 
+                    />
+                </div>
+
+                <!-- Tombol Submit -->
+                <button 
+                    type="submit" 
+                    class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-sm border-2 border-black transition-colors shadow-[4px_4px_0px_0px_black] active:translate-x-0.5 active:translate-y-0.5"
+                >
+                    Masuk
+                </button>
+
+            </form>
+
+            <div class="mt-6 text-center text-xs text-slate-600">
+                Sudah punya akun? <a href="/login" class="font-bold text-red-600 hover:underline">Masuk di sini</a>
+            </div>
+
+            <!-- Footer / Bantuan kecil -->
+            <div class="mt-6 text-center text-xs text-slate-400">
+                &copy; 2026 Toko Cihuy Anjay. All rights reserved.
+            </div>
+
+        </div>
+
+    </body>
+    <script>
+        const form = document.getElementById('login_form')
+        const status = document.getElementById('status')
+
+        form.addEventListener('submit', async function(event) {
+            // 1. Perbaikan: Tambahkan tanda kurung ()
+            event.preventDefault();
+
+            // 2. Perbaikan: Ambil nilainya dengan .value
+            const usernameVal = document.getElementById('username').value;
+            const passwordVal = document.getElementById('password').value;
+
+            const data_response = {
+                username: usernameVal,
+                password: passwordVal
+            }
+
+            // Ubah status jadi sedang proses
+            status.textContent = "Sedang memproses login...";
+            status.className = "text-sm text-blue-500 mt-1 font-semibold";
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data_response)
+                })
+
+                const hasil = await response.json()
+
+                // Cek apakah server merespons dengan status error (misal 401/404/500)
+                if (!response.ok) {
+                    status.textContent = hasil.Pesan
+                    throw new Error(hasil.Pesan);
+                }
+                
+                // Jika berhasil
+                status.textContent = hasil.Pesan;
+                status.className = "text-sm text-green-600 mt-1 font-semibold";
+                
+                // Opsional: Redirect atau reset form
+                form.reset();
+                setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+
+            } catch (error) {
+                status.textContent = "Gagal | " + hasil.Pesan;
+                status.className = "text-sm text-red-600 mt-1 font-semibold";
+            }
+        })
+    </script>
+    </html>

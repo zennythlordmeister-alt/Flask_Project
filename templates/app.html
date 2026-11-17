@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.css" integrity="sha512-x9WwyMYBnlXMNQ6kQ/Lyzu1NqIhLQKL5Oq6xByfXuRj7s9CskyCbLv/1IjqzJmXwFXWr0ov6jBV7Qbc0hh9nHg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Produk JSON ke Flask</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .shade{
+            box-shadow: 0px 10px 0px 3px black;
+        }
+        .shade:hover{
+            box-shadow: 0px 15px 0px 3px black;
+        }
+        input{
+            box-shadow: 0px 0px 0px 0px black;
+            outline: none;
+            transition: all 0.3s;
+        }
+        input:focus{
+            background-color: rgb(65, 215, 253);
+            color: black;
+            box-shadow: 0px 0px 0px 2px black;
+        }
+        input:focus::placeholder{
+            color: black;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen flex items-center justify-center p-4">
+    <div class="flex gap-5">
+        <div class="bg-white p-6 border-2 border-black w-full shade transition-all max-w-sm font-mono">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Tambah Data Produk + </h3>
+            
+            <form id="formProduk" class="space-y-3">
+                <input 
+                    type="text" 
+                    id="id" 
+                    placeholder="ID Barang (Isi Manual, Cth: B01)" 
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                <input 
+                    type="text" 
+                    id="nama_barang" 
+                    placeholder="Nama Barang" 
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                <input 
+                    type="text" 
+                    id="deskripsi_barang" 
+                    placeholder="Deskripsi Barang"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                <input 
+                    type="number" 
+                    id="harga_barang" 
+                    placeholder="Harga Barang" 
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                <input 
+                    type="number" 
+                    id="stok" 
+                    placeholder="Stok Barang" 
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                <input 
+                    type="text" 
+                    id="gambar" 
+                    placeholder="Masukan Link Address Gambar Barang" 
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                <select 
+                    id="kategori" 
+                    name="kategori"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white"
+                    >
+                    <option value="" disabled selected>Pilih Kategori Barang</option>
+                    <option value="Makanan">Makanan</option>
+                    <option value="Transportasi">Transportasi</option>
+                    <option value="Elektronik">Elektronik</option>
+                </select>
+
+                <button 
+                    type="submit"
+                    class="w-full bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200 cursor-pointer text-sm border-2 border-dashed border-white"
+                >
+                    Tambah
+                </button>
+            </form>
+
+            <p id="status" class="mt-4 font-bold text-sm"></p>
+        </div>
+        <div>
+            <a href="/">
+                <button class="bg-red-500 text-sm text-white font-bold p-4 px-6 border-2 border-black shade transition-all">
+                    Exit   <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </button>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('formProduk').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const payload = {
+                id: document.getElementById('id').value,
+                nama_barang: document.getElementById('nama_barang').value,
+                deskripsi_barang: document.getElementById('deskripsi_barang').value,
+                harga_barang: parseInt(document.getElementById('harga_barang').value),
+                stok: parseInt(document.getElementById('stok').value),
+                gambar: document.getElementById('gambar').value,
+                kategori: document.getElementById('kategori').value
+            };
+
+                
+            const statusEl = document.getElementById('status');
+
+            try {
+                // 2. Kirim data menggunakan Fetch API dengan format JSON
+                const response = await fetch('/api/tambah-produk', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusEl.innerText = result.pesan;
+                    statusEl.style.color = "green";
+                    document.getElementById('formProduk').reset(); // Kosongkan form
+                } else {
+                    statusEl.innerText = result.pesan;
+                    statusEl.style.color = "red";
+                }
+            } catch (err) {
+                console.error(err);
+                statusEl.innerText = "Terjadi kesalahan koneksi!";
+                statusEl.style.color = "red";
+            }
+        });
+    </script>
+
+</body>
+</html>
