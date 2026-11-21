@@ -122,30 +122,21 @@
                 
             const statusEl = document.getElementById('status');
 
-            try {
-                // 2. Kirim data menggunakan Fetch API dengan format JSON
-                const response = await fetch('/api/tambah-produk', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
+            const response = await fetch('/api/tambah-produk', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
 
-                const result = await response.json();
+            const result = await response.json();
 
-                if (response.ok) {
-                    statusEl.innerText = result.pesan;
-                    statusEl.style.color = "green";
-                    document.getElementById('formProduk').reset(); // Kosongkan form
-                } else {
-                    statusEl.innerText = result.pesan;
-                    statusEl.style.color = "red";
-                }
-            } catch (err) {
-                console.error(err);
-                statusEl.innerText = "Terjadi kesalahan koneksi!";
-                statusEl.style.color = "red";
+            if (response.ok) {
+                statusEl.innerText = result.pesan;
+                statusEl.style.color = "green";
+                document.getElementById('formProduk').reset();
+                window.location.href = '/gudang';
             }
         });
     </script>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Penjualan Pandas - Kasir Alfamart</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .neo-shade {
+            box-shadow: 10px 10px 0px 2px black;
+        }
+        @media print {
+            aside, .no-print {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+            }
+            .neo-shade {
+                box-shadow: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex font-mono">
+
+    <!-- Memanggil Sidebar via Jinja2 Include -->
+    {% include 'sidebar.html' %}
+
+    <!-- Konten Utama Laporan -->
+    <div class="flex-1 flex flex-col min-w-0">
+        <main class="flex-1 p-6 md:p-10 max-w-5xl mx-auto w-full">
+
+            <!-- Header & Tombol Export / Cetak -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h2 class="font-bold text-2xl text-slate-800">Laporan Penjualan Toko</h2>
+                    <p class="text-xs text-slate-500 mt-1">Detail data penjualan toko</p>
+                </div>
+
+                <div class="flex flex-wrap gap-3 no-print">
+                    <a
+                        href="/api/export-excel"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 border-2 border-black neo-shade transition-colors cursor-pointer"
+                    >
+                        Export / Download Excel
+                    </a>
+                    <button
+                        onclick="window.print()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 border-2 border-black neo-shade transition-colors cursor-pointer"
+                    >
+                        Cetak Laporan (Print)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Kartu Ringkasan Statistik Pandas -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+                <div class="bg-white border-2 border-black p-5 neo-shade">
+                    <p class="text-xs text-slate-500 font-bold uppercase">Total Transaksi</p>
+                    <p class="text-2xl font-bold text-slate-800 mt-2"><span id="stat-transaksi">0</span> Transaksi</p>
+                </div>
+                <div class="bg-white border-2 border-black p-5 neo-shade">
+                    <p class="text-xs text-slate-500 font-bold uppercase">Total Barang Terjual</p>
+                    <p class="text-2xl font-bold text-blue-700 mt-2"><span id="stat-terjual">0</span> Pcs</p>
+                </div>
+                <div class="bg-white border-2 border-black p-5 neo-shade">
+                    <p class="text-xs text-slate-500 font-bold uppercase">Total Pendapatan</p>
+                    <p class="text-2xl font-bold text-emerald-700 mt-2">Rp <span id="stat-pendapatan">0</span></p>
+                </div>
+            </div>
+
+            <!-- Tabel Pandas DataFrame -->
+            <div class="bg-white border-2 border-black p-6 neo-shade">
+                <h3 class="font-bold text-lg text-slate-800 mb-1">Tabel Penjualan</h3>
+                <p class="text-xs text-slate-500 mb-4">Daftar Transaksi Penjualan Toko Anda</p>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-center border border-black">
+                        <thead>
+                            <tr class="bg-purple-100 text-purple-900 font-bold border-b border-black">
+                                <th class="p-2.5 border-r border-black">No</th>
+                                <th class="p-2.5 border-r border-black">ID Barang</th>
+                                <th class="p-2.5 border-r border-black">Nama Barang</th>
+                                <th class="p-2.5 border-r border-black">Harga Satuan Barang</th>
+                                <th class="p-2.5 border-r border-black">Jumlah Terjual</th>
+                                <th class="p-2.5">Total Harga</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-dataframe">
+                            <tr>
+                                <td colspan="6" class="p-6 text-slate-400">Memuat data dari Pandas...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Mengambil data hasil olahan Pandas DataFrame dari backend
+        fetch('/api/laporan')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('stat-transaksi').innerText = data.total_transaksi;
+                document.getElementById('stat-terjual').innerText = data.total_terjual;
+                document.getElementById('stat-pendapatan').innerText = data.total_pendapatan;
+
+                const tbody = document.getElementById('tabel-dataframe');
+                const rows = data.tabel_dataframe;
+
+                if (rows.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="p-6 text-slate-400">
+                                Belum ada data penjualan. Silakan lakukan pembelian barang di menu <b>Gudang</b> terlebih dahulu.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    html += `
+                        <tr class="border-t border-black hover:bg-slate-50">
+                            <td class="p-2.5 border-r border-black font-bold bg-slate-50">${row["No"]}</td>
+                            <td class="p-2.5 border-r border-black font-bold">${row["ID Barang"]}</td>
+                            <td class="p-2.5 border-r border-black">${row["Nama Barang"]}</td>
+                            <td class="p-2.5 border-r border-black">Rp ${row["Harga Satuan"]}</td>
+                            <td class="p-2.5 border-r border-black font-bold">${row["Jumlah Terjual"]}</td>
+                            <td class="p-2.5 font-bold text-emerald-700">Rp ${row["Total Harga"]}</td>
+                        </tr>
+                    `;
+                }
+                tbody.innerHTML = html;
+            });
+    </script>
+</body>
+</html>

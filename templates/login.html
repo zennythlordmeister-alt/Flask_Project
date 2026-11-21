@@ -67,7 +67,7 @@
             </form>
 
             <div class="mt-6 text-center text-xs text-slate-600">
-                Sudah punya akun? <a href="/login" class="font-bold text-red-600 hover:underline">Masuk di sini</a>
+                Belum punya akun? <a href="/register" class="font-bold text-red-600 hover:underline">Daftar di sini</a>
             </div>
 
             <!-- Footer / Bantuan kecil -->
@@ -99,35 +99,23 @@
             status.textContent = "Sedang memproses login...";
             status.className = "text-sm text-blue-500 mt-1 font-semibold";
 
-            try {
-                const response = await fetch('/api/login', {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data_response)
-                })
+            const response = await fetch('/api/login', {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data_response)
+            });
 
-                const hasil = await response.json()
+            const hasil = await response.json();
 
-                // Cek apakah server merespons dengan status error (misal 401/404/500)
-                if (!response.ok) {
-                    status.textContent = hasil.Pesan
-                    throw new Error(hasil.Pesan);
-                }
-                
-                // Jika berhasil
+            if (response.ok) {
                 status.textContent = hasil.Pesan;
                 status.className = "text-sm text-green-600 mt-1 font-semibold";
-                
-                // Opsional: Redirect atau reset form
                 form.reset();
-                setTimeout(() => {
-                        location.reload();
-                    }, 1000);
-
-            } catch (error) {
-                status.textContent = "Gagal | " + hasil.Pesan;
+                window.location.href = '/';
+            } else {
+                status.textContent = hasil.Pesan;
                 status.className = "text-sm text-red-600 mt-1 font-semibold";
             }
         })
