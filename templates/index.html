@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Alfamart - Halaman Utama</title>
+    <title>Kasir Alfamart - Gudang & Transaksi</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -23,10 +23,8 @@
 
     <!-- Wrapper untuk Konten Utama di sebelah kanan sidebar -->
     <div class="flex-1 flex flex-col min-w-0">
-        
-        <!-- Top Navbar -->
 
-        <!-- Main Content (Grid Produk dari API) -->
+        <!-- Main Content -->
         <main class="flex-1 p-6 md:p-10">
             <div class="mb-10">
                 <a href="/tambah" class="border border-black w-fit px-3 py-1 rounded-full hover:bg-green-500 transition-all group">
@@ -35,35 +33,79 @@
                     </span>
                 </a>
             </div>
+
             <section id="category" data-name="makanan" class="font-mono max-w-5xl mx-auto">
                 <!-- Section Title -->
-                <h2 class="font-bold text-xl text-slate-800 mb-6">Daftar Barang di Gudang</h2>
+                <h2 class="font-bold text-xl text-slate-800 mb-2">Daftar Barang di Gudang</h2>
+                <p class="text-xs text-slate-500 mb-6">Klik tombol <b>Beli (Rp ...)</b> pada kartu barang untuk memasukkan barang ke Keranjang Kasir di bawah.</p>
 
                 <!-- Simple Card Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-                    
-                    <!-- Contoh Card Statis (Nanti akan ditimpa oleh script fetch) -->
-                    <div class="bg-white border-2 border-black rounded-sm p-5 neo-neo-shade transition-all">
-                        <div class="flex flex-col items-center gap-4 text-center">
-                            <div>
-                                <img src="https://img.magnific.com/free-vector/golden-number-1-one-champion-template-design-vector_1017-45556.jpg?semt=ais_hybrid&w=740&q=80" alt="Gambar Produk" class="max-w-[100px] mx-auto border border-black">
-                            </div>
-                            <div>
-                                <span class="inline-block text-xs font-semibold text-red-600 bg-red-50 px-2.5 py-0.5 rounded-full mb-2 border border-red-200">
-                                    Makanan
-                                </span>
-                                <h3 class="font-bold text-lg text-slate-800">Nama Barang</h3>
-                                <p class="text-sm text-slate-500 mt-1">Deskripsi singkat atau stok barang.</p>
-                                <div class="mt-4 pt-3 border-t border-slate-200 flex items-center justify-center">
-                                    <span class="font-bold text-slate-900">Rp 15.000</span>
-                                </div>
-                            </div>
+                </div>
+
+                <!-- Section Transaksi Kasir dengan Matrix 2 Dimensi -->
+                <div class="mt-14 bg-white border-2 border-black rounded-sm p-6 neo-shade">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
+                        <div>
+                            <h2 class="font-bold text-xl text-slate-800">Keranjang Kasir</h2>
+                            <p class="text-xs text-slate-500">Setiap <b>Baris [x]</b> adalah barang yang dibeli, dan <b>Kolom [0..4]</b> adalah <code>[ID, Nama, Harga, Jumlah, Subtotal]</code>. Beli &ge; 3 barang diskon 10%!</p>
                         </div>
-                        <button class="text-xs font-semibold bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors w-full mt-4 border border-black">
-                            Beli
+                        <button onclick="resetKeranjang()" class="text-xs font-bold bg-slate-200 hover:bg-slate-300 text-black px-3 py-1.5 border border-black cursor-pointer w-fit">
+                            Reset Keranjang
                         </button>
                     </div>
 
+                    <!-- Tabel Matrix Belanja -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-center border border-black">
+                            <thead>
+                                <tr class="bg-slate-100 font-bold border-b border-black">
+                                    <th class="p-2 border-r border-black">Baris [x]</th>
+                                    <th class="p-2 border-r border-black">Kolom [0]: ID</th>
+                                    <th class="p-2 border-r border-black">Kolom [1]: Nama Barang</th>
+                                    <th class="p-2 border-r border-black">Kolom [2]: Harga</th>
+                                    <th class="p-2 border-r border-black">Kolom [3]: Jumlah Beli</th>
+                                    <th class="p-2">Kolom [4]: Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabel-keranjang">
+                                <tr>
+                                    <td colspan="6" class="p-4 text-slate-400">Keranjang masih kosong. Klik tombol Beli pada barang di atas.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Ringkasan & Input Pembayaran -->
+                    <div class="mt-6 flex flex-col md:flex-row items-start md:items-end justify-between gap-4 border-t border-slate-200 pt-4">
+                        <div class="text-xs space-y-1">
+                            <p>Total Jumlah Barang: <b id="info-total-barang">0</b> pcs</p>
+                            <p>Total Harga: <b>Rp <span id="info-total-harga">0</span></b></p>
+                            <p class="text-emerald-700">Diskon (10% jika &ge; 3 pcs): <b>- Rp <span id="info-diskon">0</span></b></p>
+                            <p class="text-base font-bold text-slate-900 pt-1">Total Bayar: Rp <span id="info-total-bayar">0</span></p>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                            <input
+                                type="number"
+                                id="uang_bayar"
+                                placeholder="Masukkan Uang Bayar (Rp)"
+                                class="px-3 py-2 border-2 border-black text-sm focus:outline-none focus:bg-yellow-50"
+                            >
+                            <button
+                                onclick="prosesTransaksi()"
+                                class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 border-2 border-black cursor-pointer transition-colors"
+                            >
+                                Proses Bayar & Kurangi Stok
+                            </button>
+                        </div>
+                    </div>
+
+                    <p id="status-transaksi" class="mt-3 text-xs font-bold"></p>
+
+                    <!-- Hasil Struk & Pengurangan Matriks Stok -->
+                    <div id="hasil-matriks" class="hidden mt-6 p-4 bg-emerald-50 border-2 border-black text-xs space-y-2">
+                    </div>
                 </div>
             </section>
         </main>
@@ -71,49 +113,199 @@
 
 </body>
 <script>
-    // 1. Ambil data dari backend Flask
-    fetch('/api/barang') 
-      .then(response => response.json())
-      .then(data => {
-        console.log("Data dari database:", data);
+    let daftarBarangGudang = [];
+    let keranjang = [];
 
-        const gridContainer = document.querySelector('#category .grid');
-        gridContainer.innerHTML = '';
+    function muatBarang() {
+        fetch('/api/barang')
+          .then(response => response.json())
+          .then(data => {
+            daftarBarangGudang = data;
+            const gridContainer = document.querySelector('#category .grid');
+            gridContainer.innerHTML = '';
 
-        data.forEach(item => {
-            let warna = 'purple'; 
-            if (item.kategori === 'Makanan') {
-                warna = 'red';
-            } else if (item.kategori === 'Transportasi') {
-                warna = 'blue';
-            }
+            data.forEach(item => {
+                let warna = 'purple';
+                if (item.kategori === 'Makanan') {
+                    warna = 'red';
+                } else if (item.kategori === 'Transportasi') {
+                    warna = 'blue';
+                }
 
-            const cardHTML = `
-            <div class="bg-white border-2 border-black rounded-sm p-5 neo-shade transition-all">
-                <div class="flex flex-col items-center gap-4 text-center">
-                    <div>
-                        <img src="${item.gambar || 'https://via.placeholder.com/100'}" alt="Gambar Produk" class="max-w-[100px] mx-auto border border-black">
-                    </div>
-                    <div>
-                        <span class="inline-block text-xs font-semibold text-${warna}-600 bg-${warna}-50 px-2.5 py-0.5 rounded-full mb-2 border border-${warna}-200">
-                            ${item.kategori || 'Makanan'}
-                        </span>
-                        <h3 class="font-bold text-lg text-slate-800">${item.nama_barang}</h3>
-                        <p class="text-sm text-slate-500 mt-1">${item.deskripsi_barang}</p>
-                        <div class="mt-4 pt-3 border-t border-slate-200 flex items-center justify-center">
-                            <span class="font-bold text-slate-900">Stok : ${item.stok}</span>
+                const stokHabis = item.stok <= 0;
+                const teksTombol = stokHabis ? 'Stok Habis' : `+ Beli (Rp ${item.harga_barang})`;
+
+                const cardHTML = `
+                <div class="bg-white border-2 border-black rounded-sm p-5 neo-shade transition-all">
+                    <div class="flex flex-col items-center gap-4 text-center">
+                        <div>
+                            <img src="${item.gambar || 'https://via.placeholder.com/100'}" alt="Gambar Produk" class="max-w-[100px] mx-auto border border-black">
+                        </div>
+                        <div>
+                            <span class="inline-block text-xs font-semibold text-${warna}-600 bg-${warna}-50 px-2.5 py-0.5 rounded-full mb-2 border border-${warna}-200">
+                                ${item.kategori || 'Makanan'}
+                            </span>
+                            <h3 class="font-bold text-lg text-slate-800">${item.nama_barang}</h3>
+                            <p class="text-sm text-slate-500 mt-1">${item.deskripsi_barang}</p>
+                            <div class="mt-4 pt-3 border-t border-slate-200 flex items-center justify-center">
+                                <span class="font-bold text-slate-900">Stok : ${item.stok}</span>
+                            </div>
                         </div>
                     </div>
+                    <button
+                        onclick="tambahKeKeranjang('${item.id}')"
+                        ${stokHabis ? 'disabled' : ''}
+                        class="text-xs font-semibold ${stokHabis ? 'bg-gray-400 cursor-not-allowed' : `bg-${warna}-600 hover:bg-${warna}-700 cursor-pointer`} text-white px-3 py-2 rounded-lg transition-colors w-full mt-4 border border-black"
+                    >
+                        <span class="font-bold">${teksTombol}</span>
+                    </button>
                 </div>
-                <button class="text-xs font-semibold bg-${warna}-600 hover:bg-${warna}-700 text-white px-3 py-2 rounded-lg transition-colors w-full mt-4 border border-black">
-                    <span class="font-bold">Rp ${item.harga_barang}</span>
-                </button>
-            </div>
-            `;
+                `;
 
-            gridContainer.innerHTML += cardHTML;
+                gridContainer.innerHTML += cardHTML;
+            });
+          });
+    }
+
+    function tambahKeKeranjang(idBarang) {
+        const barang = daftarBarangGudang.find(b => b.id === idBarang);
+        if (!barang || barang.stok <= 0) return;
+
+        const itemDiKeranjang = keranjang.find(k => k.id === idBarang);
+        if (itemDiKeranjang) {
+            if (itemDiKeranjang.jumlah < barang.stok) {
+                itemDiKeranjang.jumlah += 1;
+            } else {
+                alert('Jumlah beli sudah mencapai batas stok yang tersedia!');
+            }
+        } else {
+            keranjang.push({
+                id: barang.id,
+                nama_barang: barang.nama_barang,
+                harga_barang: barang.harga_barang,
+                jumlah: 1
+            });
+        }
+        renderKeranjang();
+    }
+
+    function renderKeranjang() {
+        const tbody = document.getElementById('tabel-keranjang');
+
+        if (keranjang.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-slate-400">Keranjang masih kosong. Klik tombol Beli pada barang di atas.</td></tr>`;
+            document.getElementById('info-total-barang').innerText = '0';
+            document.getElementById('info-total-harga').innerText = '0';
+            document.getElementById('info-diskon').innerText = '0';
+            document.getElementById('info-total-bayar').innerText = '0';
+            return;
+        }
+
+        let barisHTML = '';
+        let totalBarang = 0;
+        let totalHarga = 0;
+
+        for (let x = 0; x < keranjang.length; x++) {
+            const item = keranjang[x];
+            const subtotal = item.harga_barang * item.jumlah;
+            totalBarang += item.jumlah;
+            totalHarga += subtotal;
+
+            barisHTML += `
+                <tr class="border-t border-black">
+                    <td class="p-2 border-r border-black bg-slate-50 font-bold">Baris [${x}]</td>
+                    <td class="p-2 border-r border-black">${item.id}</td>
+                    <td class="p-2 border-r border-black text-left">${item.nama_barang}</td>
+                    <td class="p-2 border-r border-black">Rp ${item.harga_barang}</td>
+                    <td class="p-2 border-r border-black font-bold">${item.jumlah}</td>
+                    <td class="p-2 font-bold">Rp ${subtotal}</td>
+                </tr>
+            `;
+        }
+
+        tbody.innerHTML = barisHTML;
+
+        const diskon = totalBarang >= 3 ? Math.floor(totalHarga * 0.1) : 0;
+        const totalBayar = totalHarga - diskon;
+
+        document.getElementById('info-total-barang').innerText = totalBarang;
+        document.getElementById('info-total-harga').innerText = totalHarga;
+        document.getElementById('info-diskon').innerText = diskon;
+        document.getElementById('info-total-bayar').innerText = totalBayar;
+    }
+    
+    function resetKeranjang() {
+        keranjang = [];
+        document.getElementById('uang_bayar').value = '';
+        document.getElementById('status-transaksi').innerText = '';
+        document.getElementById('hasil-matriks').classList.add('hidden');
+        renderKeranjang();
+    }
+
+    async function prosesTransaksi() {
+        const statusEl = document.getElementById('status-transaksi');
+        const hasilEl = document.getElementById('hasil-matriks');
+        const uangBayar = parseInt(document.getElementById('uang_bayar').value);
+
+        if (keranjang.length === 0) {
+            statusEl.innerText = 'Pilih minimal 1 barang terlebih dahulu!';
+            statusEl.className = 'mt-3 text-xs font-bold text-red-600';
+            return;
+        }
+        if (!uangBayar) {
+            statusEl.innerText = 'Masukkan nominal uang bayar terlebih dahulu!';
+            statusEl.className = 'mt-3 text-xs font-bold text-red-600';
+            return;
+        }
+
+        const response = await fetch('/api/beli', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                items: keranjang,
+                uang_bayar: uangBayar
+            })
         });
-      })
-      .catch(error => console.error('Gagal memuat data:', error));
+
+        const result = await response.json();
+
+        if (response.ok) {
+            statusEl.innerText = result.pesan;
+            statusEl.className = 'mt-3 text-xs font-bold text-emerald-700';
+
+            // Tampilkan rincian pengurangan matriks stok & struk pembayaran
+            let infoStok = '';
+            for (let x = 0; x < result.matriks_belanja.length; x++) {
+                const nama = result.matriks_belanja[x][1];
+                const stokAwal = result.mat_stok_awal[x][0];
+                const jmlBeli = result.mat_jumlah_beli[x][0];
+                const sisaStok = result.mat_sisa_stok[x][0];
+                infoStok += `<li><b>${nama}</b>: Stok Awal Barang <code>[${stokAwal}]</code> - Jumlah Beli Barang <code>[${jmlBeli}]</code> = Sisa Stok Barang <code>[${sisaStok}]</code></li>`;
+            }
+
+            hasilEl.innerHTML = `
+                <p class="font-bold text-sm text-emerald-900 border-b border-black pb-1">Struk Pembayaran & Hasil Operasi Pengurangan Stok:</p>
+                <ul class="list-disc pl-5 space-y-1">${infoStok}</ul>
+                <div class="pt-2 border-t border-emerald-300 flex flex-wrap gap-4 font-bold">
+                    <span>Total Bayar: Rp ${result.total_bayar}</span>
+                    <span>Uang Bayar: Rp ${result.uang_bayar}</span>
+                    <span class="text-emerald-800">Uang Kembali: Rp ${result.uang_kembali}</span>
+                </div>
+            `;
+            hasilEl.classList.remove('hidden');
+
+            // Kosongkan keranjang & muat ulang kartu barang agar stok terbaru langsung terlihat
+            keranjang = [];
+            document.getElementById('uang_bayar').value = '';
+            renderKeranjang();
+            muatBarang();
+        } else {
+            statusEl.innerText = result.pesan;
+            statusEl.className = 'mt-3 text-xs font-bold text-red-600';
+        }
+    }
+
+    // Muat daftar barang saat halaman dibuka
+    muatBarang();
 </script>
 </html>

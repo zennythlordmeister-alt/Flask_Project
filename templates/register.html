@@ -97,27 +97,23 @@
             status.textContent = "Sedang memproses pendaftaran...";
             status.className = "text-sm text-blue-500 mt-1 font-semibold";
 
-            try {
-                const response = await fetch('/api/register', {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data_response)
-                });
+            const response = await fetch('/api/register', {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data_response)
+            });
 
-                const hasil = await response.json();
+            const hasil = await response.json();
 
-                if (!response.ok) {
-                    throw new Error(hasil.Pesan || "Pendaftaran gagal.");
-                }
-                
-                status.textContent = "✅ Pendaftaran Berhasil!";
+            if (response.ok) {
+                status.textContent = hasil.Pesan;
                 status.className = "text-sm text-green-600 mt-1 font-semibold";
                 form.reset();
-
-            } catch (error) {
-                status.textContent = error.message;
+                window.location.href = '/login';
+            } else {
+                status.textContent = hasil.Pesan;
                 status.className = "text-sm text-red-600 mt-1 font-semibold";
             }
         });
